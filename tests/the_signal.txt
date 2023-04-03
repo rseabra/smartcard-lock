@@ -1,6 +1,13 @@
 busctl --user monitor
 
 (...)
+dbus-monitor "type='signal', path='/org/gnome/SettingsDaemon/Smartcard/Manager/Tokens/token_from_p11_2d_kit_2d_proxy_2e_so_slot_17', interface='org.freedesktop.DBus.Properties', member='PropertiesChanged'"
+
+or
+
+busctl --user monitor --destination=org.gnome.SettingsDaemon.Smartcard.Token org.freedesktop.DBus.Properties
+
+
 
 ‣ Type=signal  Endian=l  Flags=1  Version=1 Cookie=126  Timestamp="Mon 2023-04-03 11:59:05.722861 UTC"
   Sender=:1.48  Path=/org/gnome/SettingsDaemon/Smartcard/Manager/Tokens/token_from_p11_2d_kit_2d_proxy_2e_so_slot_17  Interface=org.freedesktop.DBus.Properties  Member=PropertiesChanged

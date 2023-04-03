@@ -3,47 +3,11 @@ const GLib = imports.gi.GLib;
 
 // An XML DBus Interface
 const ifaceXml = `
-<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
-        <!--
-        org.gnome.SettingsDaemon.Smartcard.Manager:
-
-        An interface used for managing smartcard functionality.
-        -->
-        <interface name="org.gnome.SettingsDaemon.Smartcard.Manager">
-                <method name="GetLoginToken">
-                        <arg name="token" type="o" direction="out"/>
-                </method>
-
-                <method name="GetInsertedTokens">
-                        <arg name="tokens" type="ao" direction="out"/>
-                </method>
-        </interface>
-
-        <!--
-        org.gnome.SettingsDaemon.Smartcard.Driver:
-
-        The smartcard driver interface.
-        -->
-        <interface name="org.gnome.SettingsDaemon.Smartcard.Driver">
-                <!--
-                Library:
-                Path to PKCS11 module
-                -->
-                <property name="Library" type="s" access="read"/>
-
-                <!--
-                Description:
-                String describing the PKCS11 module
-                -->
-                <property name="Description" type="s" access="read"/>
-        </interface>
-
-        <!--
-        org.gnome.SettingsDaemon.Smartcard.Token:
-
-        The smartcard interface.
-        -->
+<node>
         <interface name="org.gnome.SettingsDaemon.Smartcard.Token">
+		<signal name="PropertiesChanged">
+			<arg type="sv" direction="out" />
+		</signal>
                 <!--
                 Name:
                 Name of the token
@@ -79,7 +43,7 @@ let proxySignalId = 0;
 let proxyPropId = 0;
 
 function showProps(props) {
-        print(`PropertiesChanged: ${props}`);
+        print(`PropertiesChanged: `);
         for (let [prop, value] of Object.entries(props.deepUnpack())) {
             print("foo1")
             print(`Property '${prop}' changed to '${value.deepUnpack()}'`);
@@ -94,8 +58,8 @@ function onNameAppeared(connection, name, _owner) {
     try {
         proxy = new TestProxy(
             Gio.DBus.session,
-            'org.freedesktop.DBus.Properties',
-            '/org/gnome/SettingsDaemon/Smartcard/Manager/Tokens'
+	    'org.gnome.SettingsDaemon.Smartcard',
+            '/org/gnome/SettingsDaemon/Smartcard/Manager/Tokens/token_from_p11_2d_kit_2d_proxy_2e_so_slot_17'
         );
     } catch (err) {
         log(err);
@@ -115,17 +79,17 @@ function onNameAppeared(connection, name, _owner) {
 
     // To watch property changes, you can connect to the `g-properties-changed`
     // GObject signal with `connect()`
-    proxyPropId = proxy.connect('g-properties-changed', (proxy_, changed, invalidated) => {
-        for (let [prop, value] of Object.entries(changed.deepUnpack())) {
-            print("foo1")
-            print(`Property '${prop}' changed to '${value.deepUnpack()}'`);
-        }
+    //proxyPropId = proxy.connect('g-properties-changed', (proxy_, changed, invalidated) => {
+    //    for (let [prop, value] of Object.entries(changed.deepUnpack())) {
+    //        print("foo1")
+    //        print(`Property '${prop}' changed to '${value.deepUnpack()}'`);
+    //    }
 
-        for (let prop of invalidated) {
-            print("foo2")
-            print(`Property '${prop}' invalidated`);
-        }
-    });
+    //    for (let prop of invalidated) {
+    //        print("foo2")
+    //        print(`Property '${prop}' invalidated`);
+    //    }
+    //});
 
 
     //// Reading and writing properties is straight-forward
@@ -173,13 +137,13 @@ function onNameVanished(connection, name) {
     }
 }
 
-//let busWatchId = Gio.bus_watch_name(
-//    Gio.BusType.SESSION,
-//    'org.freedesktop.systemd1',
-//    Gio.BusNameWatcherFlags.NONE,
-//    onNameAppeared,
-//    onNameVanished
-//);
+let busWatchId = Gio.bus_watch_name(
+    Gio.BusType.SESSION,
+    'org.freedesktop.systemd1',
+    Gio.BusNameWatcherFlags.NONE,
+    onNameAppeared,
+    onNameVanished
+);
 
 // Start an event loop
 let loop = GLib.MainLoop.new(null, false);

@@ -1,0 +1,76 @@
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+	<interface name="org.freedesktop.DBus.Properties">
+		<signal name="PropertiesChanged">
+			<arg type="sv" direction="out" />
+		</signal>
+                <property name="IsInserted" type="b" access="read"/>
+
+	</interface>
+        <!--
+        org.gnome.SettingsDaemon.Smartcard.Manager:
+
+        An interface used for managing smartcard functionality.
+        -->
+        <interface name="org.gnome.SettingsDaemon.Smartcard.Manager">
+                <method name="GetLoginToken">
+                        <arg name="token" type="o" direction="out"/>
+                </method>
+
+                <method name="GetInsertedTokens">
+                        <arg name="tokens" type="ao" direction="out"/>
+                </method>
+        </interface>
+
+        <!--
+        org.gnome.SettingsDaemon.Smartcard.Driver:
+
+        The smartcard driver interface.
+        -->
+        <interface name="org.gnome.SettingsDaemon.Smartcard.Driver">
+                <!--
+                Library:
+                Path to PKCS11 module
+                -->
+                <property name="Library" type="s" access="read"/>
+
+                <!--
+                Description:
+                String describing the PKCS11 module
+                -->
+                <property name="Description" type="s" access="read"/>
+        </interface>
+
+        <!--
+        org.gnome.SettingsDaemon.Smartcard.Token:
+
+        The smartcard interface.
+        -->
+        <interface name="org.gnome.SettingsDaemon.Smartcard.Token">
+		<signal name="PropertiesChanged">
+			<arg type="sv" direction="out" />
+		</signal>
+                <!--
+                Name:
+                Name of the token
+                -->
+                <property name="Name" type="s" access="read"/>
+
+                <!--
+                Driver:
+                Driver handling token
+                -->
+                <property name="Driver" type="o" access="read"/>
+
+                <!--
+                IsInserted:
+                Whether or not the card is inserted
+                -->
+                <property name="IsInserted" type="b" access="read"/>
+
+                <!--
+                UsedToLogin:
+                Whether or not the card was used to log in
+                -->
+                <property name="UsedToLogin" type="b" access="read"/>
+        </interface>
+</node>
