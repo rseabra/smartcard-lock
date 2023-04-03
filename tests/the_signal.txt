@@ -1,0 +1,21 @@
+busctl --user monitor
+
+(...)
+
+‣ Type=signal  Endian=l  Flags=1  Version=1 Cookie=126  Timestamp="Mon 2023-04-03 11:59:05.722861 UTC"
+  Sender=:1.48  Path=/org/gnome/SettingsDaemon/Smartcard/Manager/Tokens/token_from_p11_2d_kit_2d_proxy_2e_so_slot_17  Interface=org.freedesktop.DBus.Properties  Member=PropertiesChanged
+  UniqueName=:1.48
+  MESSAGE "sa{sv}as" {
+          STRING "org.gnome.SettingsDaemon.Smartcard.Token";
+          ARRAY "{sv}" {
+                  DICT_ENTRY "sv" {
+                          STRING "IsInserted";
+                          VARIANT "b" {
+                                  BOOLEAN false;
+                          };
+                  };
+          };
+          ARRAY "s" {
+          };
+  };
+
