@@ -1,7 +1,8 @@
 const { GObject, Gio, GLib } = imports.gi;
 
 const session_connection = Gio.DBus.session;
-const notification = new GLib.Variant('()', [
+
+const notification_tokens = new GLib.Variant('()', [
     'GNOME Smartcard Lock',
     0,
     'dialog-information-symbolic',
@@ -11,17 +12,6 @@ const notification = new GLib.Variant('()', [
     {},
     -1
 ]);
-
-// An XML DBus Interface
-const tokens_interface_xml = `
-<node>
-    <interface name="org.gnome.SettingsDaemon.Smartcard.Manager">
-    	<method name="GetInsertedTokens">
-		<arg type="o" direction="out" name="tokens" />
-	</method>
-    </interface>
-</node>
-`;
 
 const token_interface_xml = `
 <node>
@@ -42,36 +32,22 @@ let proxy = null;
 function showProps(proxy_, changed, invalidated) {
         for ( let [prop, value] of Object.entries(changed.deepUnpack()) ) {
 		if( prop == 'IsInserted' ) {
-			if( value.get_boolean()) {
-    				print(`Card inserted`);
-
-			} else {
-    				print(`Card removed`);
+			if( ! value.get_boolean()) {
+    				// print(`Card removed`);
 
 				session_connection.call(
 					'org.gnome.ScreenSaver',
 					'/org/gnome/ScreenSaver',
 					'org.gnome.ScreenSaver',
 					'Lock',
-					notification,
+					null,
 					null,
 					Gio.DBusCallFlags.NONE,
 					-1,
 					null,
-					(session_connection, res) => {
-						try {
-							//const reply = session_connection.call_finish(res);
-							//const value = reply.get_child_value(0);
-							//const id = value.get_uint32();
-							//print(`Notification ID: ${id}`);
-    							log(`Screen locked`);
-						} catch(e) {
-							if (e instanceof Gio.DBusError)
-								Gio.DBusError.strip_remote_error(e);
-							logError(e);
-						}
-					}
+					null
 				);
+				log(`Requested org.gnome.ScreenSaver to lock`);
 			}
 		}
         }
@@ -81,20 +57,42 @@ function showProps(proxy_, changed, invalidated) {
 };
 
 function onSmartCardAppeared(connection, name, _owner) {
-    print(`"${name}" appeared on the session bus`);
-
-    try {
-        proxy = new TokenProxy(
-            Gio.DBus.session,
-	    'org.gnome.SettingsDaemon.Smartcard',
-            '/org/gnome/SettingsDaemon/Smartcard/Manager/Tokens/token_from_p11_2d_kit_2d_proxy_2e_so_slot_17'
-        );
-    } catch (err) {
-        log(err);
-        return;
-    }
- 
-    proxy.connect('g-properties-changed', showProps);
+	log(`"${name}" appeared on the session bus`);
+	session_connection.call(
+		'org.gnome.SettingsDaemon.Smartcard',
+		'/org/gnome/SettingsDaemon/Smartcard/Manager',
+		'org.gnome.SettingsDaemon.Smartcard.Manager',
+		'GetInsertedTokens',
+		notification_tokens,
+		null,
+		Gio.DBusCallFlags.NONE,
+		-1,
+		null,
+		(session_connection, res) => {
+			try {
+				const reply = session_connection.call_finish(res);
+				values = reply.get_child_value(0);
+				for( let [prop, value] of Object.entries(values.deepUnpack()) ) {
+					log(`Following presence of smartcard: ${value}`);
+					try {
+					    proxy = new TokenProxy(
+					        Gio.DBus.session,
+					        'org.gnome.SettingsDaemon.Smartcard',
+					        value
+					    );
+					    proxy.connect('g-properties-changed', showProps);
+					} catch (err) {
+					    log(err);
+					    return;
+					}
+				}
+			} catch(e) {
+				if (e instanceof Gio.DBusError)
+					Gio.DBusError.strip_remote_error(e);
+				logError(e);
+			}
+		}
+	);
 }
 
 function onSmartCardVanished(connection, name) {
