@@ -1,6 +1,28 @@
 const { GObject, Gio, GLib } = imports.gi;
 
+const session_connection = Gio.DBus.session;
+const notification = new GLib.Variant('()', [
+    'GNOME Smartcard Lock',
+    0,
+    'dialog-information-symbolic',
+    'Locking Title',
+    'Locking Body',
+    [],
+    {},
+    -1
+]);
+
 // An XML DBus Interface
+const tokens_interface_xml = `
+<node>
+    <interface name="org.gnome.SettingsDaemon.Smartcard.Manager">
+    	<method name="GetInsertedTokens">
+		<arg type="o" direction="out" name="tokens" />
+	</method>
+    </interface>
+</node>
+`;
+
 const token_interface_xml = `
 <node>
     <interface name="org.gnome.SettingsDaemon.Smartcard.Token">
@@ -25,6 +47,31 @@ function showProps(proxy_, changed, invalidated) {
 
 			} else {
     				print(`Card removed`);
+
+				session_connection.call(
+					'org.gnome.ScreenSaver',
+					'/org/gnome/ScreenSaver',
+					'org.gnome.ScreenSaver',
+					'Lock',
+					notification,
+					null,
+					Gio.DBusCallFlags.NONE,
+					-1,
+					null,
+					(session_connection, res) => {
+						try {
+							//const reply = session_connection.call_finish(res);
+							//const value = reply.get_child_value(0);
+							//const id = value.get_uint32();
+							//print(`Notification ID: ${id}`);
+    							log(`Screen locked`);
+						} catch(e) {
+							if (e instanceof Gio.DBusError)
+								Gio.DBusError.strip_remote_error(e);
+							logError(e);
+						}
+					}
+				);
 			}
 		}
         }
@@ -48,14 +95,6 @@ function onSmartCardAppeared(connection, name, _owner) {
     }
  
     proxy.connect('g-properties-changed', showProps);
-    //proxy.connect('g-properties-changed', (proxy_, changed, invalidated) => {
-    //        for ( let [prop, value] of Object.entries(changed.deepUnpack()) ) {
-    //    		print(`Properties ${prop}, changed to ${value}`);
-    //        }
-    //        for ( let prop of invalidated ) {
-    //    	    print(`Property '${prop}' invalidated`);
-    //        }
-    //});
 }
 
 function onSmartCardVanished(connection, name) {
@@ -67,6 +106,7 @@ function onSmartCardVanished(connection, name) {
         proxy = null;
     }
 }
+
 
 let busWatchId = Gio.bus_watch_name(
     Gio.BusType.SESSION,
