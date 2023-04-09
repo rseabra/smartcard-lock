@@ -5,9 +5,8 @@ const Me = ExtensionUtils.getCurrentExtension();
 
 function g_sc_l_proxy_cleanup(connection, name) {
 	if (g_sc_l_proxies !== null) {
-		for ( proxy of g_sc_l_proxies) {
-			proxy.disconnectSignal(g_sc_l_proxySignalId);
-			proxy.disconnect(g_sc_l_proxyPropId);
+		for (let [proxy, proxyPropId] of g_sc_l_proxies) {
+			proxy.disconnect(proxyPropId);
 			proxy = null;
 		}
 	}
@@ -56,8 +55,8 @@ function g_sc_l_onSmartCardAppeared(connection, name, _owner) {
 							'org.gnome.SettingsDaemon.Smartcard',
 							value
 						);
-						proxy.connect('g-properties-changed', g_sc_l_checkSmartCardRemoved);
-						g_sc_l_proxies.push(proxy);
+						let id = proxy.connect('g-properties-changed', g_sc_l_checkSmartCardRemoved);
+						g_sc_l_proxies.set(id, proxy);
 					} catch (err) {
 						g_sc_l_log(err);
 						return;
@@ -114,9 +113,8 @@ const g_sc_l_token_interface_xml = `
 </node>
 `;
 
-g_sc_l_proxies = [];
+g_sc_l_proxies = new Map();
 g_sc_l_proxySignalId = 0;
-g_sc_l_proxyPropId = 0;
 
 
 class Extension {
@@ -127,7 +125,7 @@ class Extension {
 	
 	enable() {
 		g_sc_l_log('enabling');
-		g_sc_l_proxies = [];
+		g_sc_l_proxies = new Map();
 		this.busWatchId = Gio.bus_watch_name(
 			Gio.BusType.SESSION,
 			'org.gnome.SettingsDaemon.Smartcard',
