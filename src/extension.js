@@ -1,10 +1,7 @@
-//const St = imports.gi.St;
 const { GObject, Gio, GLib } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-//const Main = imports.ui.main;
-//const PanelMenu = imports.ui.panelMenu;
 
 function mylog(message) {
         log(`${Me.metadata.name}: ` + message);
@@ -66,13 +63,14 @@ function onSmartCardAppeared(connection, name, _owner) {
 function onSmartCardVanished(connection, name) {
 		print(`"${name}" vanished from the session bus`);
 		
-		//if (Me.proxies !== null) {
-		//	for ( proxy of Me.proxies) {
-		//		proxy.disconnectSignal(proxySignalId);
-		//		proxy.disconnect(proxyPropId);
-		//		proxy = null;
-		//	}
-		//}
+		if (g_sc_proxies !== null) {
+			for ( proxy of g_sc_proxies) {
+				proxy.disconnectSignal(g_sc_proxySignalId);
+				proxy.disconnect(g_sc_proxyPropId);
+				proxy = null;
+			}
+		}
+		g_sc_proxies = null;
 }
 
 function checkSmartCardRemoved(proxy_, changed, invalidated) {
@@ -113,6 +111,8 @@ const token_interface_xml = `
 `;
 
 g_sc_proxies = [];
+g_sc_proxySignalId = 0;
+g_sc_proxyPropId = 0;
 
 
 class Extension {
