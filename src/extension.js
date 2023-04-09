@@ -3,12 +3,24 @@ const { GObject, Gio, GLib } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
-function mylog(message) {
+function g_sc_l_proxy_cleanup(connection, name) {
+	if (g_sc_l_proxies !== null) {
+		for ( proxy of g_sc_l_proxies) {
+			proxy.disconnectSignal(g_sc_l_proxySignalId);
+			proxy.disconnect(g_sc_l_proxyPropId);
+			proxy = null;
+		}
+	}
+	g_sc_l_proxies = null;
+}
+
+
+function g_sc_l_log(message) {
         log(`${Me.metadata.name}: ` + message);
 }
 
-function onSmartCardAppeared(connection, name, _owner) {
-	mylog(`"${name}" appeared on the session bus`);
+function g_sc_l_onSmartCardAppeared(connection, name, _owner) {
+	g_sc_l_log(`"${name}" appeared on the session bus`);
 
 	const notification_tokens = new GLib.Variant('()', [
 		'GNOME Smartcard Lock',
@@ -36,44 +48,35 @@ function onSmartCardAppeared(connection, name, _owner) {
 				const reply = session.call_finish(res);
 				values = reply.get_child_value(0);
 				for( let [prop, value] of Object.entries(values.deepUnpack()) ) {
-					mylog(`Following presence of smartcard: ${value}`);
+					g_sc_l_log(`Following presence of smartcard: ${value}`);
 					try {
-						let TokenProxy = Gio.DBusProxy.makeProxyWrapper(token_interface_xml);
+						let TokenProxy = Gio.DBusProxy.makeProxyWrapper(g_sc_l_token_interface_xml);
 						proxy = new TokenProxy(
 							Gio.DBus.session,
 							'org.gnome.SettingsDaemon.Smartcard',
 							value
 						);
-						proxy.connect('g-properties-changed', checkSmartCardRemoved);
-						g_sc_proxies.push(proxy);
+						proxy.connect('g-properties-changed', g_sc_l_checkSmartCardRemoved);
+						g_sc_l_proxies.push(proxy);
 					} catch (err) {
-						mylog(err);
+						g_sc_l_log(err);
 						return;
 					}
 				}
 			} catch(e) {
 				if (e instanceof Gio.DBusError)
 					Gio.DBusError.strip_remote_error(e);
-				mylog(e);
+				g_sc_l_log(e);
 			}
 		}
 	);
 }
 
-function onSmartCardVanished(connection, name) {
-		print(`"${name}" vanished from the session bus`);
-		
-		if (g_sc_proxies !== null) {
-			for ( proxy of g_sc_proxies) {
-				proxy.disconnectSignal(g_sc_proxySignalId);
-				proxy.disconnect(g_sc_proxyPropId);
-				proxy = null;
-			}
-		}
-		g_sc_proxies = null;
+function g_sc_l_onSmartCardVanished(connection, name) {
+	print(`"${name}" vanished from the session bus`);
+	g_sc_l_proxy_cleanup();
 }
-
-function checkSmartCardRemoved(proxy_, changed, invalidated) {
+function g_sc_l_checkSmartCardRemoved(proxy_, changed, invalidated) {
 	for ( let [prop, value] of Object.entries(changed.deepUnpack()) ) {
 		if( prop == 'IsInserted' ) {
 			if( ! value.get_boolean()) {
@@ -91,15 +94,16 @@ function checkSmartCardRemoved(proxy_, changed, invalidated) {
 					null,
 					null
 				);
-				mylog(`Requested org.gnome.ScreenSaver to lock`);
+				g_sc_l_log(`Requested org.gnome.ScreenSaver to lock`);
 			}
 		}
 	}
 	for ( let prop of invalidated ) {
-	    mylog(`Property '${prop}' invalidated`);
+	    g_sc_l_log(`Property '${prop}' invalidated`);
 	}
 };
-const token_interface_xml = `
+
+const g_sc_l_token_interface_xml = `
 <node>
     <interface name="org.gnome.SettingsDaemon.Smartcard.Token">
         <property name="Name" type="s" access="read"/>
@@ -110,9 +114,9 @@ const token_interface_xml = `
 </node>
 `;
 
-g_sc_proxies = [];
-g_sc_proxySignalId = 0;
-g_sc_proxyPropId = 0;
+g_sc_l_proxies = [];
+g_sc_l_proxySignalId = 0;
+g_sc_l_proxyPropId = 0;
 
 
 class Extension {
@@ -122,14 +126,14 @@ class Extension {
 
 	
 	enable() {
-		mylog('enabling');
-		g_sc_proxies = [];
+		g_sc_l_log('enabling');
+		g_sc_l_proxies = [];
 		this.busWatchId = Gio.bus_watch_name(
 			Gio.BusType.SESSION,
 			'org.gnome.SettingsDaemon.Smartcard',
 			Gio.BusNameWatcherFlags.NONE,
-			onSmartCardAppeared,
-			onSmartCardVanished
+			g_sc_l_onSmartCardAppeared,
+			g_sc_l_onSmartCardVanished
 		);
 
 	}
@@ -137,13 +141,14 @@ class Extension {
 	// REMINDER: It's required for extensions to clean up after themselves when
 	// they are disabled. This is required for approval during review!
 	disable() {
-		mylog('disabling');
-		g_sc_proxies = [];
+		g_sc_l_log('disabling');
+		g_sc_l_proxy_cleanup();
+		Gio.bus_unown_name(this.busWatchId);
 		this.busWatchId = null;
 	}
 }
 
 function init() {
-	mylog(`initializing`);
+	g_sc_l_log(`initializing`);
 	return new Extension();
 }
