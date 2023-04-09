@@ -72,7 +72,7 @@ function g_sc_l_onSmartCardAppeared(connection, name, _owner) {
 }
 
 function g_sc_l_onSmartCardVanished(connection, name) {
-	print(`"${name}" vanished from the session bus`);
+	// g_sc_l_log(`"${name}" vanished from the session bus`);
 	g_sc_l_proxy_cleanup();
 }
 function g_sc_l_checkSmartCardRemoved(proxy_, changed, invalidated) {
