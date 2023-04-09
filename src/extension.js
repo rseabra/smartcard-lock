@@ -5,7 +5,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 
 function g_sc_l_proxy_cleanup(connection, name) {
 	if (g_sc_l_proxies !== null) {
-		for (let [proxy, proxyPropId] of g_sc_l_proxies) {
+		for (let [proxyPropId, proxy] of g_sc_l_proxies) {
 			proxy.disconnect(proxyPropId);
 			proxy = null;
 		}
@@ -19,7 +19,7 @@ function g_sc_l_log(message) {
 }
 
 function g_sc_l_onSmartCardAppeared(connection, name, _owner) {
-	g_sc_l_log(`"${name}" appeared on the session bus`);
+	//g_sc_l_log(`"${name}" appeared on the session bus`);
 
 	const notification_tokens = new GLib.Variant('()', [
 		'GNOME Smartcard Lock',
@@ -50,7 +50,7 @@ function g_sc_l_onSmartCardAppeared(connection, name, _owner) {
 					g_sc_l_log(`Following presence of smartcard: ${value}`);
 					try {
 						let TokenProxy = Gio.DBusProxy.makeProxyWrapper(g_sc_l_token_interface_xml);
-						proxy = new TokenProxy(
+						let proxy = new TokenProxy(
 							Gio.DBus.session,
 							'org.gnome.SettingsDaemon.Smartcard',
 							value
@@ -114,12 +114,10 @@ const g_sc_l_token_interface_xml = `
 `;
 
 g_sc_l_proxies = new Map();
-g_sc_l_proxySignalId = 0;
-
 
 class Extension {
 	constructor() {
-		this.busWatchId = null;
+		this.busWatchId = 0;
 	}
 
 	
@@ -142,7 +140,7 @@ class Extension {
 		g_sc_l_log('disabling');
 		g_sc_l_proxy_cleanup();
 		Gio.bus_unown_name(this.busWatchId);
-		this.busWatchId = null;
+		this.busWatchId = 0;
 	}
 }
 
