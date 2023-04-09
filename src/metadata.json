@@ -1,8 +1,8 @@
 {
-  "uuid": "gnome-smartcard-lock@1407.org",
-  "name": "gnome-smartcard-lock",
+  "uuid": "smartcard-lock@gnome.org",
+  "name": "GNOME Smartcard Lock",
   "description": "Locks the screen on smartcard removal",
-  "version": 1,
+  "version": 2,
   "shell-version": [
     "43"
   ]
