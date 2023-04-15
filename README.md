@@ -20,3 +20,7 @@ But there's a screenshot of a development release in debug mode which does provi
 ## License
 
 Smartcard Lock for GNOME is licensed under the terms of the GNU GPL 3.0 or, at your option, any later version. Please read the complete terms under LICENSE.
+
+## Known Issues
+
+There's a wiki page for [Known Issues](https://github.com/rseabra/smartcard-lock/wiki/Known-Issues), please check it out before opening a case.
