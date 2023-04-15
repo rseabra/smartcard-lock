@@ -1,7 +1,8 @@
 {
-  "uuid": "smartcard-lock@gnome.org",
+  "uuid": "gnome-smartcard-lock@1407.org",
   "name": "GNOME Smartcard Lock",
-  "description": "Locks the screen on smartcard removal",
+  "description": "This extension just locks the screen whenver a smartcard token recognized by GNOME as used for login is removed.",
+  "url": "https://github.com/rseabra/gnome-smartcard-lock/",
   "version": 1,
   "shell-version": [
     "43"
