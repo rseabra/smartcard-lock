@@ -20,23 +20,23 @@ const { GObject, Gio, GLib } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
-function g_sc_l_proxy_cleanup(connection, name) {
-	if (g_sc_l_proxies !== null) {
-		for (let [proxyPropId, proxy] of g_sc_l_proxies) {
+function proxy_cleanup(connection, name) {
+	if (proxies !== null) {
+		for (let [proxyPropId, proxy] of proxies) {
 			proxy.disconnect(proxyPropId);
 			proxy = null;
 		}
 	}
-	g_sc_l_proxies = null;
+	proxies = null;
 }
 
 
-function g_sc_l_log(message) {
-        log(`${Me.metadata.name}: ` + message);
+function mylog(message) {
+	if(Me.metadata.debug == true) log(`${Me.metadata.name}: ` + message);
 }
 
-function g_sc_l_onSmartCardAppeared(connection, name, _owner) {
-	//g_sc_l_log(`"${name}" appeared on the session bus`);
+function onSmartCardAppeared(connection, name, _owner) {
+	//log(`"${name}" appeared on the session bus`);
 
 	const notification_tokens = new GLib.Variant('()', [
 		'GNOME Smartcard Lock',
@@ -64,35 +64,35 @@ function g_sc_l_onSmartCardAppeared(connection, name, _owner) {
 				const reply = session.call_finish(res);
 				values = reply.get_child_value(0);
 				for( let [prop, value] of Object.entries(values.deepUnpack()) ) {
-					g_sc_l_log(`Following presence of smartcard: ${value}`);
+					mylog(`Following presence of smartcard: ${value}`);
 					try {
-						let TokenProxy = Gio.DBusProxy.makeProxyWrapper(g_sc_l_token_interface_xml);
+						let TokenProxy = Gio.DBusProxy.makeProxyWrapper(token_interface_xml);
 						let proxy = new TokenProxy(
 							Gio.DBus.session,
 							'org.gnome.SettingsDaemon.Smartcard',
 							value
 						);
-						let id = proxy.connect('g-properties-changed', g_sc_l_checkSmartCardRemoved);
-						g_sc_l_proxies.set(id, proxy);
+						let id = proxy.connect('g-properties-changed', checkSmartCardRemoved);
+						proxies.set(id, proxy);
 					} catch (err) {
-						g_sc_l_log(err);
+						log(`${Me.metadata.name}: ${err}`);
 						return;
 					}
 				}
 			} catch(e) {
 				if (e instanceof Gio.DBusError)
 					Gio.DBusError.strip_remote_error(e);
-				g_sc_l_log(e);
+				log(`${Me.metadata.name}: ${e}`);
 			}
 		}
 	);
 }
 
-function g_sc_l_onSmartCardVanished(connection, name) {
-	// g_sc_l_log(`"${name}" vanished from the session bus`);
-	g_sc_l_proxy_cleanup();
+function onSmartCardVanished(connection, name) {
+	// mylog(`"${name}" vanished from the session bus`);
+	proxy_cleanup();
 }
-function g_sc_l_checkSmartCardRemoved(proxy_, changed, invalidated) {
+function checkSmartCardRemoved(proxy_, changed, invalidated) {
 	for ( let [prop, value] of Object.entries(changed.deepUnpack()) ) {
 		if( prop == 'IsInserted' ) {
 			if( ! value.get_boolean()) {
@@ -110,27 +110,27 @@ function g_sc_l_checkSmartCardRemoved(proxy_, changed, invalidated) {
 					null,
 					null
 				);
-				g_sc_l_log(`Requested org.gnome.ScreenSaver to lock`);
+				mylog(`Requested org.gnome.ScreenSaver to lock`);
 			}
 		}
 	}
 	for ( let prop of invalidated ) {
-	    g_sc_l_log(`Property '${prop}' invalidated`);
+		mylog(`Property '${prop}' invalidated`);
 	}
 };
 
-const g_sc_l_token_interface_xml = `
+const token_interface_xml = `
 <node>
-    <interface name="org.gnome.SettingsDaemon.Smartcard.Token">
-        <property name="Name" type="s" access="read"/>
-        <property name="Driver" type="o" access="read"/>
-        <property name="IsInserted" type="b" access="read"/>
-        <property name="UsedToLogin" type="b" access="read"/>
-    </interface>
+	<interface name="org.gnome.SettingsDaemon.Smartcard.Token">
+		<property name="Name" type="s" access="read"/>
+		<property name="Driver" type="o" access="read"/>
+		<property name="IsInserted" type="b" access="read"/>
+		<property name="UsedToLogin" type="b" access="read"/>
+	</interface>
 </node>
 `;
 
-g_sc_l_proxies = new Map();
+proxies = new Map();
 
 class Extension {
 	constructor() {
@@ -139,14 +139,14 @@ class Extension {
 
 	
 	enable() {
-		g_sc_l_log('enabling');
-		g_sc_l_proxies = new Map();
+		mylog('enabling');
+		proxies = new Map();
 		this.busWatchId = Gio.bus_watch_name(
 			Gio.BusType.SESSION,
 			'org.gnome.SettingsDaemon.Smartcard',
 			Gio.BusNameWatcherFlags.NONE,
-			g_sc_l_onSmartCardAppeared,
-			g_sc_l_onSmartCardVanished
+			onSmartCardAppeared,
+			onSmartCardVanished
 		);
 
 	}
@@ -154,14 +154,14 @@ class Extension {
 	// REMINDER: It's required for extensions to clean up after themselves when
 	// they are disabled. This is required for approval during review!
 	disable() {
-		g_sc_l_log('disabling');
-		g_sc_l_proxy_cleanup();
+		mylog('disabling');
+		proxy_cleanup();
 		Gio.bus_unwatch_name(this.busWatchId);
 		this.busWatchId = 0;
 	}
 }
 
 function init() {
-	g_sc_l_log(`initializing`);
+	mylog(`initializing`);
 	return new Extension();
 }

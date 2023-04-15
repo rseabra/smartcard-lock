@@ -1,11 +1,11 @@
-# GNOME Smartcard Lock
+# Smartcard Lock for GNOME
 
-GNOME Shell Extention that looks for smartcards, and immediately locks the screen if one of them is removed using **org.gnome.SettingsDaemon.Smartcard.Token** interface.
+This is a GNOME Shell Extention that looks for smartcards, and immediately locks the screen if one of them is removed using **org.gnome.SettingsDaemon.Smartcard.Token** interface.
 
 Action shot: https://youtu.be/iagRs7pNGko
 
 Since there is no GUI, I can only provide a screenshot of the log file:
-![screenshot of the log](images/gnome-smartcard-lock-screenshot.png)
+![screenshot of the log](images/smartcard-lock-screenshot.png)
 
 ## Future
 - maybe specify which smartcards to look at
@@ -17,4 +17,4 @@ Since there is no GUI, I can only provide a screenshot of the log file:
 
 ## License
 
-GNOME Smartcard Lock is licensed under the terms of the GNU GPL 3.0 or, at your option, any later version. Please read the complete terms under LICENSE.
+Smartcard Lock for GNOME is licensed under the terms of the GNU GPL 3.0 or, at your option, any later version. Please read the complete terms under LICENSE.
