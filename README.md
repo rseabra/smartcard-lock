@@ -4,6 +4,9 @@ GNOME Shell Extention that looks for smartcards, and immediately locks the scree
 
 Action shot: https://youtu.be/iagRs7pNGko
 
+Since there is no GUI, I can only provide a screenshot of the log file:
+![screenshot of the log](images/gnome-smartcard-lock-screenshot.png)
+
 ## Future
 - maybe specify which smartcards to look at
 
