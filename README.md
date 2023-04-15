@@ -4,7 +4,9 @@ This is a GNOME Shell Extention that looks for smartcards, and immediately locks
 
 Action shot: https://youtu.be/iagRs7pNGko
 
-Since there is no GUI, I can only provide a screenshot of the log file:
+Since there is no GUI, I can't provide a screenshot! :)
+
+But there's a screenshot of a development release in debug mode which does provide some logging:
 ![screenshot of the log](images/smartcard-lock-screenshot.png)
 
 ## Future
