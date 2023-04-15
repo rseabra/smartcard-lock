@@ -139,7 +139,7 @@ class Extension {
 	disable() {
 		g_sc_l_log('disabling');
 		g_sc_l_proxy_cleanup();
-		Gio.bus_unown_name(this.busWatchId);
+		Gio.bus_unwatch_name(this.busWatchId);
 		this.busWatchId = 0;
 	}
 }
