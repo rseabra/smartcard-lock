@@ -3,9 +3,10 @@
   "name": "Smartcard Lock",
   "description": "This extension just locks the screen whenever a smartcard token recognized by GNOME as used for login is removed.",
   "url": "https://github.com/rseabra/smartcard-lock/",
-  "version": 1,
+  "version": 2,
   "shell-version": [
-    "43"
+    "43",
+    "44"
   ],
   "debug": false
 }
